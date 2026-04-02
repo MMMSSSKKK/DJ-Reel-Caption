@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DJ Caption" />
+  <title>DJ Caption</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #1a1a1a;
+      font-family: 'Courier New', monospace;
+      color: #fff;
+      padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+    }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 36px 20px 80px;
+    }
+
+    /* Input panel */
+    .panel {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .track-block { margin-bottom: 12px; }
+    .track-block:last-of-type { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 10px;
+      color: #666;
+      letter-spacing: 0.18em;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .row2 { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+
+    input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 3px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 16px;
+      font-family: 'Courier New', monospace;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input::placeholder { color: rgba(255,255,255,0.2); }
+
+    /* Tag input with fixed # */
+    .tag-wrap {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .tag-hash {
+      padding: 10px 0 10px 12px;
+      color: #fff;
+      font-size: 16px;
+      font-family: 'Courier New', monospace;
+      user-select: none;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .tag-wrap input {
+      border: none;
+      background: transparent;
+      padding-left: 4px;
+      flex: 1;
+    }
+
+    .emoji-input { max-width: 120px; margin-bottom: 22px; }
+
+    /* Generate button */
+    #btn-generate {
+      width: 100%;
+      padding: 14px;
+      background: rgba(255,255,255,0.06);
+      border: none;
+      border-radius: 3px;
+      color: #555;
+      font-size: 12px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      cursor: not-allowed;
+      transition: all 0.2s;
+    }
+    #btn-generate.active {
+      background: linear-gradient(135deg, #E1306C, #c0255a);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* Output blocks */
+    .output { display: flex; flex-direction: column; gap: 12px; }
+
+    .copy-block {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .copy-block.copied { border-color: rgba(255,255,255,0.3); }
+
+    .copy-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+    .copy-header-left { display: flex; align-items: center; gap: 8px; }
+    .copy-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: #fff;
+      text-transform: uppercase;
+    }
+    .copy-note {
+      font-size: 10px;
+      color: #555;
+      letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      background: rgba(255,255,255,0.07);
+      border: none;
+      border-radius: 3px;
+      color: #fff;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .copy-btn.copied { background: rgba(255,255,255,0.2); }
+
+    pre.copy-text {
+      margin: 0;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #ccc;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: 'Courier New', monospace;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Input panel -->
+  <div class="panel">
+
+    <div class="track-block">
+      <label>TRACK 1</label>
+      <div class="row2">
+        <input id="artist1" type="text" placeholder="アーティスト" autocomplete="off" />
+        <input id="song1" type="text" placeholder="曲名" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="track-block">
+      <label>TRACK 2</label>
+      <div class="row2">
+        <input id="artist2" type="text" placeholder="アーティスト" autocomplete="off" />
+        <input id="song2" type="text" placeholder="曲名" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="row3">
+      <div>
+        <label>TAG 1</label>
+        <div class="tag-wrap"><span class="tag-hash">#</span><input id="tag1" type="text" autocomplete="off" /></div>
+      </div>
+      <div>
+        <label>TAG 2</label>
+        <div class="tag-wrap"><span class="tag-hash">#</span><input id="tag2" type="text" autocomplete="off" /></div>
+      </div>
+      <div>
+        <label>TAG 3</label>
+        <div class="tag-wrap"><span class="tag-hash">#</span><input id="tag3" type="text" placeholder="任意" tabindex="-1" autocomplete="off" /></div>
+      </div>
+    </div>
+
+    <div>
+      <label>EMOJI</label>
+      <input id="emoji" type="text" class="emoji-input" autocomplete="off" />
+    </div>
+
+    <button id="btn-generate" onclick="generate()">GENERATE</button>
+  </div>
+
+  <!-- Output -->
+  <div class="output hidden" id="output">
+    <div class="copy-block" id="block-title">
+      <div class="copy-header">
+        <div class="copy-header-left"><span class="copy-label">Title</span></div>
+        <button class="copy-btn" onclick="copyText('title')">COPY</button>
+      </div>
+      <pre class="copy-text" id="text-title"></pre>
+    </div>
+    <div class="copy-block" id="block-instagram">
+      <div class="copy-header">
+        <div class="copy-header-left"><span class="copy-label">Instagram</span></div>
+        <button class="copy-btn" onclick="copyText('instagram')">COPY</button>
+      </div>
+      <pre class="copy-text" id="text-instagram"></pre>
+    </div>
+    <div class="copy-block" id="block-tiktok">
+      <div class="copy-header">
+        <div class="copy-header-left"><span class="copy-label">TikTok</span></div>
+        <button class="copy-btn" onclick="copyText('tiktok')">COPY</button>
+      </div>
+      <pre class="copy-text" id="text-tiktok"></pre>
+    </div>
+    <div class="copy-block" id="block-youtube">
+      <div class="copy-header">
+        <div class="copy-header-left">
+          <span class="copy-label">YouTube Shorts</span>
+          <span class="copy-note">(60秒以内)</span>
+        </div>
+        <button class="copy-btn" onclick="copyText('youtube')">COPY</button>
+      </div>
+      <pre class="copy-text" id="text-youtube"></pre>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const lc = s => s.toLowerCase();
+
+  function val(id) { return document.getElementById(id).value.trim(); }
+
+  function updateBtn() {
+    const ok = document.getElementById('song1').value.trim()
+            && document.getElementById('song2').value.trim()
+            && document.getElementById('tag1').value.trim()
+            && document.getElementById('tag2').value.trim();
+    const btn = document.getElementById('btn-generate');
+    btn.classList.toggle('active', !!ok);
+  }
+
+  ['artist1','song1','artist2','song2','tag1','tag2','tag3','emoji'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', updateBtn);
+    el.addEventListener('keyup', updateBtn);
+    el.addEventListener('change', updateBtn);
+    el.addEventListener('compositionend', updateBtn);
+  });
+
+  // Polling fallback for iOS where events can be unreliable
+  setInterval(updateBtn, 300);
+
+  function generate() {
+    const s1 = val('song1'), s2 = val('song2');
+    const a1 = val('artist1'), a2 = val('artist2');
+    const t1 = val('tag1') ? lc(val('tag1').replace(/\s+/g, '')) : '';
+    const t2 = val('tag2') ? lc(val('tag2').replace(/\s+/g, '')) : '';
+    const t3 = val('tag3') ? lc(val('tag3').replace(/\s+/g, '')) : '';
+    const em = val('emoji');
+    if (!s1 || !s2 || !t1 || !t2) return;
+
+    const mixTag = t3 || 'djmix';
+    const tags = `#dj #${mixTag} #transition${t1 ? ' #'+t1 : ''}${t2 ? ' #'+t2 : ''} `;
+    const mentions = [a1 && `@${a1}`, a2 && `@${a2}`].filter(Boolean).join(' ');
+
+    const captions = {
+      title: `${s1} × ${s2}`,
+      instagram: `${em}${s1} × ${s2}\n\n${mentions}\n${tags}`,
+      tiktok: `${em}${s1} × ${s2}\n#dj #${mixTag} #transition${t1?' #'+t1:''}${t2?' #'+t2:''} `,
+      youtube: `${a1?a1+' - ':''}${s1}\n${a2?a2+' - ':''}${s2}\n#dj #${mixTag} #shorts${t1?' #'+t1:''}${t2?' #'+t2:''}`,
+    };
+
+    Object.keys(captions).forEach(k => {
+      document.getElementById('text-'+k).textContent = captions[k];
+      document.getElementById('block-'+k).classList.remove('copied');
+      const btn = document.querySelector(`#block-${k} .copy-btn`);
+      btn.textContent = 'COPY';
+      btn.classList.remove('copied');
+    });
+
+    document.getElementById('output').classList.remove('hidden');
+  }
+
+  function copyText(id) {
+    const text = document.getElementById('text-'+id).textContent;
+
+    // Create a temporary textarea, select it, and copy
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+
+    // iOS needs setSelectionRange
+    ta.setSelectionRange(0, 99999);
+
+    let success = false;
+    try {
+      success = document.execCommand('copy');
+    } catch(e) {}
+    document.body.removeChild(ta);
+
+    // Also try modern API as fallback
+    if (!success && navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+
+    const block = document.getElementById('block-'+id);
+    const btn = block.querySelector('.copy-btn');
+    block.classList.add('copied');
+    btn.classList.add('copied');
+    btn.textContent = '✓ COPIED!';
+    setTimeout(() => {
+      block.classList.remove('copied');
+      btn.classList.remove('copied');
+      btn.textContent = 'COPY';
+    }, 2000);
+  }
+</script>
+</body>
+</html>
