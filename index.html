@@ -231,16 +231,9 @@
       </div>
       <pre class="copy-text" id="text-title"></pre>
     </div>
-    <div class="copy-block" id="block-instagram">
-      <div class="copy-header">
-        <div class="copy-header-left"><span class="copy-label">Instagram</span></div>
-        <button class="copy-btn" onclick="copyText('instagram')">COPY</button>
-      </div>
-      <pre class="copy-text" id="text-instagram"></pre>
-    </div>
     <div class="copy-block" id="block-tiktok">
       <div class="copy-header">
-        <div class="copy-header-left"><span class="copy-label">TikTok</span></div>
+        <div class="copy-header-left"><span class="copy-label">Instagram / TikTok</span></div>
         <button class="copy-btn" onclick="copyText('tiktok')">COPY</button>
       </div>
       <pre class="copy-text" id="text-tiktok"></pre>
@@ -266,9 +259,7 @@
 
   function updateBtn() {
     const ok = document.getElementById('song1').value.trim()
-            && document.getElementById('song2').value.trim()
-            && document.getElementById('tag1').value.trim()
-            && document.getElementById('tag2').value.trim();
+            && document.getElementById('song2').value.trim();
     const btn = document.getElementById('btn-generate');
     btn.classList.toggle('active', !!ok);
   }
@@ -287,11 +278,13 @@
   function generate() {
     const s1 = val('song1'), s2 = val('song2');
     const a1 = val('artist1'), a2 = val('artist2');
-    const t1 = val('tag1') ? lc(val('tag1').replace(/\s+/g, '')) : '';
-    const t2 = val('tag2') ? lc(val('tag2').replace(/\s+/g, '')) : '';
+    const t1raw = val('tag1') ? lc(val('tag1').replace(/\s+/g, '')) : lc(a1.replace(/\s+/g, ''));
+    const t2raw = val('tag2') ? lc(val('tag2').replace(/\s+/g, '')) : lc(a2.replace(/\s+/g, ''));
+    const t1 = t1raw;
+    const t2 = t2raw;
     const t3 = val('tag3') ? lc(val('tag3').replace(/\s+/g, '')) : '';
     const em = val('emoji');
-    if (!s1 || !s2 || !t1 || !t2) return;
+    if (!s1 || !s2) return;
 
     const mixTag = t3 || 'djmix';
     const tags = `#dj #${mixTag} #transition${t1 ? ' #'+t1 : ''}${t2 ? ' #'+t2 : ''} `;
@@ -299,8 +292,7 @@
 
     const captions = {
       title: `${s1} × ${s2}`,
-      instagram: `${em}${s1} × ${s2}\n\n${mentions}\n${tags}`,
-      tiktok: `${em}${s1} × ${s2}\n#dj #${mixTag} #transition${t1?' #'+t1:''}${t2?' #'+t2:''} `,
+      tiktok: `${s1} × ${s2}${em ? em : ''}\n#dj #${mixTag} #transition${t1?' #'+t1:''}${t2?' #'+t2:''} `,
       youtube: `${a1?a1+' - ':''}${s1}\n${a2?a2+' - ':''}${s2}\n#dj #${mixTag} #shorts${t1?' #'+t1:''}${t2?' #'+t2:''}`,
     };
 
